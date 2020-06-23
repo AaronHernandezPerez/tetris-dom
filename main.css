@@ -1,0 +1,50 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+
+}
+
+body {
+  min-height: 100%;
+  overflow: hidden
+}
+
+
+
+#grid {
+  width: 200px;
+  height: 400px;
+  background-color: yellow;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#grid.lost {
+  background-color: lightgray;
+}
+
+#grid.won {
+  background-color: green;
+}
+
+#grid div {
+  width: 20px;
+  height: 20px;
+  /* background-color: red; */
+  border: 1px solid black;
+}
+
+
+
+.frozen {
+  background-color: gray;
+}
+
+.tetromino {
+  background-color: blue;
+}
