@@ -14,7 +14,11 @@ body {
   overflow: hidden
 }
 
-
+.container {
+  display: flex;
+  max-width: 300px;
+  justify-content: space-between;
+}
 
 #grid {
   width: 200px;
@@ -39,12 +43,27 @@ body {
   border: 1px solid black;
 }
 
-
+.tetromino {
+  background-color: blue;
+}
 
 .frozen {
   background-color: gray;
 }
 
-.tetromino {
-  background-color: blue;
+#next-grid {
+  width: 80px;
+  height: 80px;
+  /* background-color: lightyellow; */
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#next-grid div {
+  width: 20px;
+  height: 20px;
+}
+
+#next-grid div.tetromino {
+  border: 1px solid black;
 }

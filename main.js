@@ -1,66 +1,74 @@
 document.addEventListener("DOMContentLoaded", () => {
   const Grid = document.getElementById("grid");
+  const RowWidth = 10;
+  const NextGrid = document.getElementById("next-grid");
+  const NextWidth = 4;
 
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < RowWidth * 20; i++) {
     Grid.appendChild(document.createElement("div"));
   }
 
-  let squares = Array.from(document.querySelectorAll("#grid div"));
+  for (let i = 0; i < NextWidth * NextWidth; i++) {
+    NextGrid.appendChild(document.createElement("div"));
+  }
+
+  let tetrisSquares = Array.from(document.querySelectorAll("#grid div"));
+  let nextSquares = Array.from(document.querySelectorAll("#next-grid div"));
   const ScoreDisplay = document.getElementById("score");
   const StartBtn = document.getElementById("start-button");
-  const RowWidth = 10;
   const FrozenClass = "frozen";
 
-  let randomTetromino;
+  const DownOffset = RowWidth;
+  const LeftOffset = -1;
+  const RightOffset = 1;
+
   let currentTetromio;
+  let currentTetrominoIndex;
   let currentTetromioPosition = 0;
   let currentPosition = 4;
   let score = 0;
 
   // Order in the display of 10*20
   // Position relative to currentPosition
-  const lTetromino = [
-    [1, RowWidth + 1, RowWidth * 2 + 1, 2],
-    [RowWidth, RowWidth + 1, RowWidth + 2, RowWidth * 2 + 2],
-    [1, RowWidth + 1, RowWidth * 2 + 1, RowWidth * 2],
-    [RowWidth, RowWidth * 2, RowWidth * 2 + 1, RowWidth * 2 + 2],
+  const jTetromino = [
+    [1, 2, 3, RowWidth + 3],
+    [2, RowWidth + 2, RowWidth * 2 + 2, 3],
+    [1, RowWidth + 1, RowWidth + 2, RowWidth + 3],
+    [2, RowWidth + 2, RowWidth * 2 + 2, RowWidth * 2 + 1],
   ];
 
-  const zTetromino = [
-    [0, RowWidth, RowWidth + 1, RowWidth * 2 + 1],
-    [RowWidth + 1, RowWidth + 2, RowWidth * 2, RowWidth * 2 + 1],
-    [0, RowWidth, RowWidth + 1, RowWidth * 2 + 1],
-    [RowWidth + 1, RowWidth + 2, RowWidth * 2, RowWidth * 2 + 1],
+  const lTetromino = [];
+
+  const sTetromino = [
+    [2, 3, RowWidth + 1, RowWidth + 2],
+    [2, RowWidth + 2, RowWidth + 3, RowWidth * 2 + 3],
   ];
+
+  const zTetromino = [];
 
   const tTetromino = [
-    [1, RowWidth, RowWidth + 1, RowWidth + 2],
-    [1, RowWidth + 1, RowWidth + 2, RowWidth * 2 + 1],
-    [RowWidth, RowWidth + 1, RowWidth + 2, RowWidth * 2 + 1],
-    [1, RowWidth, RowWidth + 1, RowWidth * 2 + 1],
+    [RowWidth + 1, RowWidth + 2, RowWidth + 3, RowWidth * 2 + 2],
+    [2, RowWidth + 2, RowWidth + 3, RowWidth * 2 + 2],
+    [2, RowWidth + 1, RowWidth + 2, RowWidth + 3],
+    [2, RowWidth + 1, RowWidth + 2, RowWidth * 2 + 2],
   ];
 
-  const oTetromino = [
-    [0, 1, RowWidth, RowWidth + 1],
-    [0, 1, RowWidth, RowWidth + 1],
-    [0, 1, RowWidth, RowWidth + 1],
-    [0, 1, RowWidth, RowWidth + 1],
-  ];
+  const oTetromino = [[1, 2, RowWidth + 1, RowWidth + 2]];
 
   const iTetromino = [
-    [1, RowWidth + 1, RowWidth * 2 + 1, RowWidth * 3 + 1],
-    [RowWidth, RowWidth + 1, RowWidth + 2, RowWidth + 3],
-    [1, RowWidth + 1, RowWidth * 2 + 1, RowWidth * 3 + 1],
-    [RowWidth, RowWidth + 1, RowWidth + 2, RowWidth + 3],
+    [0, 1, 2, 3],
+    [2, RowWidth + 2, RowWidth * 2 + 2, RowWidth * 3 + 2],
   ];
 
   const TheTetrominoes = [
-    lTetromino,
-    zTetromino,
-    tTetromino,
-    oTetromino,
+    // jTetromino,
+    // sTetromino,
+    // tTetromino,
+    // oTetromino,
     iTetromino,
   ];
+
+  let nextTetrominoIndex = getRandomTetrominoe();
 
   // Functions
   function getRandomTetrominoe() {
@@ -69,33 +77,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function draw() {
     currentTetromio.forEach((index) => {
-      squares[currentPosition + index].classList.add("tetromino");
+      tetrisSquares[currentPosition + index].classList.add("tetromino");
+    });
+  }
+
+  function drawNext() {
+    const NextToClean = NextGrid.querySelectorAll(".tetromino");
+
+    for (let i = 0; i < NextToClean.length; i++) {
+      NextToClean[i].classList.remove("tetromino");
+    }
+
+    TheTetrominoes[nextTetrominoIndex][0].forEach((index) => {
+      if (index >= RowWidth) {
+        let rest = index % RowWidth;
+        let divider = parseInt(index / RowWidth);
+        index = rest + NextWidth * divider;
+      }
+      nextSquares[index + 0].classList.add("tetromino");
     });
   }
 
   function undraw() {
     currentTetromio.forEach((index) => {
-      squares[currentPosition + index].classList.remove("tetromino");
+      tetrisSquares[currentPosition + index].classList.remove("tetromino");
     });
   }
 
   function newTetrominoe() {
-    randomTetromino = getRandomTetrominoe();
-    currentTetromio = TheTetrominoes[randomTetromino][0];
-    currentPosition = 4;
+    currentTetrominoIndex = nextTetrominoIndex;
+    drawNext();
+    nextTetrominoIndex = getRandomTetrominoe();
+    currentTetromio = TheTetrominoes[currentTetrominoIndex][0];
+    currentPosition = 3;
   }
 
-  function moveDown() {
+  function checkCompletedRow() {
+    for (let i = 0; i < tetrisSquares.length; i += RowWidth) {
+      let completedRow = true;
+
+      for (let j = 0; j < RowWidth; j++) {
+        if (!tetrisSquares[i + j].classList.contains(FrozenClass)) {
+          completedRow = false;
+          break;
+        }
+      }
+
+      if (completedRow) {
+        console.log("Completed row!");
+      }
+    }
+  }
+
+  function nextFrame() {
     undraw();
     if (checkCollision()) {
       // next tetromino
       currentTetromio.forEach((index) =>
-        squares[currentPosition + index].classList.add(FrozenClass)
+        tetrisSquares[currentPosition + index].classList.add(FrozenClass)
       );
+      checkCompletedRow();
       newTetrominoe();
       if (
         currentTetromio.some((pos) =>
-          squares[currentPosition + pos].classList.contains(FrozenClass)
+          tetrisSquares[currentPosition + pos].classList.contains(FrozenClass)
         )
       ) {
         finishGame();
@@ -119,8 +164,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function checkCollision(offset = RowWidth, tetromio = currentTetromio) {
     return tetromio.some(
       (pos) =>
-        currentPosition + pos + offset >= squares.length ||
-        squares[currentPosition + pos + offset].classList.contains(FrozenClass)
+        currentPosition + pos + offset >= tetrisSquares.length ||
+        tetrisSquares[currentPosition + pos + offset].classList.contains(
+          FrozenClass
+        )
     );
   }
 
@@ -129,18 +176,33 @@ document.addEventListener("DOMContentLoaded", () => {
     window.removeEventListener("keydown", mapKeys);
   }
 
-  const DownOffset = RowWidth;
-  const LeftOffset = -1;
-  const RightOffset = 1;
-
   function rotatePosition() {
     undraw();
     currentTetromioPosition =
-      ++currentTetromioPosition >= TheTetrominoes[randomTetromino].length
+      ++currentTetromioPosition >= TheTetrominoes[currentTetrominoIndex].length
         ? 0
         : currentTetromioPosition;
-    currentTetromio = TheTetrominoes[randomTetromino][currentTetromioPosition];
+    currentTetromio =
+      TheTetrominoes[currentTetrominoIndex][currentTetromioPosition];
     draw();
+  }
+
+  function moveLeft() {
+    if (
+      !currentTetromio.some((pos) => (currentPosition + pos) % RowWidth === 0)
+    ) {
+      updatePosition(LeftOffset);
+    }
+  }
+
+  function moveRight() {
+    if (
+      !currentTetromio.some(
+        (pos) => (currentPosition + pos) % RowWidth == RowWidth - 1
+      )
+    ) {
+      updatePosition(RightOffset);
+    }
   }
 
   function mapKeys(event) {
@@ -152,22 +214,10 @@ document.addEventListener("DOMContentLoaded", () => {
         updatePosition(DownOffset);
         break;
       case "ArrowLeft":
-        if (
-          !currentTetromio.some(
-            (pos) => (currentPosition + pos) % RowWidth === 0
-          )
-        ) {
-          updatePosition(LeftOffset);
-        }
+        moveLeft();
         break;
       case "ArrowRight":
-        if (
-          !currentTetromio.some(
-            (pos) => (currentPosition + pos) % RowWidth == RowWidth - 1
-          )
-        ) {
-          updatePosition(RightOffset);
-        }
+        moveRight();
         break;
 
       default:
@@ -178,7 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function startGame() {
     newTetrominoe();
     draw();
-
     window.addEventListener("keydown", mapKeys);
   }
 
@@ -186,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
   startGame();
 
   // Move piece
-  let timer = setInterval(() => {
-    moveDown();
-  }, 1000);
+  // let timer = setInterval(() => {
+  // nextFrame();
+  // }, 100);
 });
