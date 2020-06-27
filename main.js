@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const RightBtn = document.getElementById("right");
   const StartBtn = document.getElementById("start-button");
   const Restart = document.getElementById("restart");
+  const Vibration = document.getElementById("vibration");
   const ScoreTable = [40, 100, 300, 1200];
   const NessFramerate = 60.0988;
 
@@ -58,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let pause = false;
   let ended = false;
   let timer = null;
+  let vibration = true;
 
   // Order in the display of 10*20
   // Position relative to a square of 4x4
@@ -269,7 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (lines >= 0) {
-      addLines(lines);
+      addLines(lines + 1);
       addScore(ScoreTable[lines]);
       setLevel();
     }
@@ -331,6 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
           currentTetromioPosition = position;
           currentTetromio = TheTetrominoes[currentTetrominoIndex].positions[currentTetromioPosition];
           draw();
+          vibrate();
         }
       }
     } while (position !== currentTetromioPosition);
@@ -343,6 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function moveLeft() {
     if (canMoveLeft()) {
       updatePosition(LeftOffset);
+      vibrate();
     }
   }
 
@@ -353,6 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function moveRight() {
     if (canMoveRight()) {
       updatePosition(RightOffset);
+      vibrate();
     }
   }
 
@@ -366,11 +371,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ended = false;
     completedLevels = 0;
+    addLevel(0);
     score = 0;
+    addScore(0);
     completedLines = 0;
+    addLines(0);
 
     clearInterval(timer);
     startGame();
+  }
+
+  function vibrate() {
+    if (vibrate) {
+      Navigator.vibrate();
+    }
   }
 
   function mapKeys(event) {

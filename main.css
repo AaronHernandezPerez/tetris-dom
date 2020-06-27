@@ -88,7 +88,7 @@ h3 {
 
 .grid-container {
   display: flex;
-  max-width: 300px;
+  max-width: 400px;
   justify-content: space-between;
 }
 
@@ -112,8 +112,6 @@ h3 {
 #grid div {
   width: 20px;
   height: 20px;
-  /* background-color: red; */
-  /* border: 1px solid black; */
 }
 
 #grid div.invisible {
@@ -130,13 +128,17 @@ h3 {
   border: 1px solid black;
 }
 
+.side-panel {
+  margin-left: 16px;
+  width: 100px;
+}
+
 #next-grid {
   width: 80px;
   height: 80px;
-  /* background-color: lightyellow; */
   display: flex;
   flex-wrap: wrap;
-  margin-left: 16px;
+  margin-bottom: 2em;
 }
 
 #next-grid div {
