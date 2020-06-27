@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const RightBtn = document.getElementById("right");
   const StartBtn = document.getElementById("start-button");
   const Restart = document.getElementById("restart");
-  const Vibration = document.getElementById("vibration");
+  const VibrationBtn = document.getElementById("vibration");
   const ScoreTable = [40, 100, 300, 1200];
   const NessFramerate = 60.0988;
 
@@ -302,6 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
       undraw();
       currentPosition += pos;
       draw();
+      vibrate();
     }
   }
 
@@ -346,7 +347,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function moveLeft() {
     if (canMoveLeft()) {
       updatePosition(LeftOffset);
-      vibrate();
     }
   }
 
@@ -357,7 +357,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function moveRight() {
     if (canMoveRight()) {
       updatePosition(RightOffset);
-      vibrate();
     }
   }
 
@@ -382,8 +381,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function vibrate() {
-    if (vibrate) {
-      Navigator.vibrate();
+    if (vibration) {
+      navigator.vibrate(15);
     }
   }
 
@@ -492,6 +491,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Events
   StartBtn.addEventListener("click", togglePause);
   Restart.addEventListener("click", restartGame);
+  VibrationBtn.addEventListener("change", () => {
+    vibration = VibrationBtn.checked;
+  });
+
   // Control Events
   window.addEventListener("keydown", mapKeys);
   setClickEvents(RotateBtn, rotatePosition);
