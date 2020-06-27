@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ],
   };
 
-  const TheTetrominoes = [tTetromino, jTetromino, zTetromino, oTetromino, sTetromino, lTetromino, iTetromino];
+  const TheTetrominoes = [tTetromino, , jTetromino, zTetromino, oTetromino, sTetromino, lTetromino, iTetromino];
 
   let nextTetrominoIndex = getRandomTetrominoe();
 
@@ -506,16 +506,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Control Events
   window.addEventListener("keydown", mapKeys);
-  setClickEvents(RotateBtn, rotatePosition);
-  setClickEvents(LeftBtn, moveLeft);
-  setClickEvents(DownBtn, updatePosition);
-  setClickEvents(RightBtn, moveRight);
+  setClickEvents(RotateBtn, () => {
+    mapKeys({ key: "ArrowUp" });
+  });
+  setClickEvents(LeftBtn, () => {
+    mapKeys({ key: "ArrowLeft" });
+  });
+  setClickEvents(DownBtn, () => {
+    mapKeys({ key: "ArrowDown" });
+  });
+  setClickEvents(RightBtn, () => {
+    mapKeys({ key: "ArrowRight" });
+  });
 
   // Gestures events
-  setPanEvents("panleft", "x", moveLeft);
-  setPanEvents("panright", "x", moveRight);
-  setPanEvents("panup", "y", rotatePosition, 80);
-  setPanEvents("pandown", "y", updatePosition);
+  setPanEvents(
+    "panup",
+    "y",
+    () => {
+      mapKeys({ key: "ArrowUp" });
+    },
+    80
+  );
+  setPanEvents("panleft", "x", () => {
+    mapKeys({ key: "ArrowLeft" });
+  });
+  setPanEvents("pandown", "y", () => {
+    mapKeys({ key: "ArrowDown" });
+  });
+  setPanEvents("panright", "x", () => {
+    mapKeys({ key: "ArrowRight" });
+  });
 
   // Starting game!
   startGame();
