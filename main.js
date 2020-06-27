@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ],
   };
 
-  const TheTetrominoes = [tTetromino, , jTetromino, zTetromino, oTetromino, sTetromino, lTetromino, iTetromino];
+  const TheTetrominoes = [tTetromino, jTetromino, zTetromino, oTetromino, sTetromino, lTetromino, iTetromino];
 
   let nextTetrominoIndex = getRandomTetrominoe();
 
