@@ -445,7 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
       clearHold();
     });
 
-    hm.on("panend", () => {
+    hm.on("panend panstart", () => {
       clearHold();
     });
   }
@@ -470,7 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    HammerBody.on("panend", () => {
+    HammerBody.on("panend panstart", (e) => {
       currentPanEvent = null;
       lastUpdate = 0;
     });
