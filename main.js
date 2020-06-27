@@ -178,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
     drawNext();
     currentTetromio = TheTetrominoes[currentTetrominoIndex].positions[0];
     currentPosition = 3 + RowWidth * TheTetrominoes[currentTetrominoIndex].rowOffset;
+    currentTetromioPosition = 0;
   }
 
   function addScore(points) {
