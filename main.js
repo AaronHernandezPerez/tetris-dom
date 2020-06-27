@@ -4,115 +4,246 @@ document.addEventListener("DOMContentLoaded", () => {
   const NextGrid = document.getElementById("next-grid");
   const NextWidth = 4;
 
+  const FrozenClass = "frozen";
+  const InvisibleClass = "invisible";
+  const TetrominoClass = "tetromino";
+
+  const HammerBody = new Hammer(document.body);
+  HammerBody.get("swipe").set({ direction: Hammer.DIRECTION_ALL });
+  HammerBody.get("pan").set({ threshold: 15, direction: Hammer.DIRECTION_ALL });
+
+  for (let i = 0; i < RowWidth * 2; i++) {
+    const element = document.createElement("div");
+    element.classList.add(InvisibleClass);
+    Grid.appendChild(element);
+  }
+
   for (let i = 0; i < RowWidth * 20; i++) {
     Grid.appendChild(document.createElement("div"));
   }
 
-  for (let i = 0; i < NextWidth * NextWidth; i++) {
+  for (let i = 0; i < NextWidth * 4; i++) {
     NextGrid.appendChild(document.createElement("div"));
   }
 
   let tetrisSquares = Array.from(document.querySelectorAll("#grid div"));
+  window.tetrisSquares = tetrisSquares;
   let nextSquares = Array.from(document.querySelectorAll("#next-grid div"));
+  const LevelDisplay = document.getElementById("level");
+  const LinesDisplay = document.getElementById("lines");
   const ScoreDisplay = document.getElementById("score");
+  const RotateBtn = document.getElementById("rotate");
+  const LeftBtn = document.getElementById("left");
+  const DownBtn = document.getElementById("down");
+  const RightBtn = document.getElementById("right");
   const StartBtn = document.getElementById("start-button");
-  const FrozenClass = "frozen";
+  const Restart = document.getElementById("restart");
+  const ScoreTable = [40, 100, 300, 1200];
+  const NessFramerate = 60.0988;
 
   const DownOffset = RowWidth;
   const LeftOffset = -1;
   const RightOffset = 1;
 
+  // Variables
+  let timeToNextFrame = null;
+
+  let completedLevels = 0;
+  let completedLines = 0;
   let currentTetromio;
   let currentTetrominoIndex;
   let currentTetromioPosition = 0;
   let currentPosition = 4;
   let score = 0;
+  let pause = false;
+  let ended = false;
+  let timer = null;
 
   // Order in the display of 10*20
-  // Position relative to currentPosition
-  const jTetromino = [
-    [1, 2, 3, RowWidth + 3],
-    [2, RowWidth + 2, RowWidth * 2 + 2, 3],
-    [1, RowWidth + 1, RowWidth + 2, RowWidth + 3],
-    [2, RowWidth + 2, RowWidth * 2 + 2, RowWidth * 2 + 1],
-  ];
+  // Position relative to a square of 4x4
+  const tTetromino = {
+    rowOffset: 0,
+    positions: [
+      [RowWidth * 2 + 1, RowWidth * 2 + 2, RowWidth * 2 + 3, RowWidth * 3 + 2],
+      [RowWidth + 2, RowWidth * 2 + 2, RowWidth * 2 + 3, RowWidth * 3 + 2],
+      [RowWidth + 2, RowWidth * 2 + 1, RowWidth * 2 + 2, RowWidth * 2 + 3],
+      [RowWidth + 2, RowWidth * 2 + 1, RowWidth * 2 + 2, RowWidth * 3 + 2],
+    ],
+  };
 
-  const lTetromino = [];
+  const jTetromino = {
+    rowOffset: 0,
+    positions: [
+      [RowWidth * 2 + 1, RowWidth * 2 + 2, RowWidth * 2 + 3, RowWidth * 3 + 3],
+      [RowWidth + 2, RowWidth + 3, RowWidth * 2 + 2, RowWidth * 3 + 2],
+      [RowWidth + 1, RowWidth * 2 + 1, RowWidth * 2 + 2, RowWidth * 2 + 3],
+      [RowWidth + 2, RowWidth * 2 + 2, RowWidth * 3 + 1, RowWidth * 3 + 2],
+    ],
+  };
 
-  const sTetromino = [
-    [2, 3, RowWidth + 1, RowWidth + 2],
-    [2, RowWidth + 2, RowWidth + 3, RowWidth * 2 + 3],
-  ];
+  const zTetromino = {
+    rowOffset: 1,
+    positions: [
+      [RowWidth + 1, RowWidth + 2, RowWidth * 2 + 2, RowWidth * 2 + 3],
+      [RowWidth + 3, RowWidth * 2 + 2, RowWidth * 2 + 3, RowWidth * 3 + 2],
+    ],
+  };
 
-  const zTetromino = [];
+  const oTetromino = {
+    rowOffset: 0,
+    positions: [[RowWidth * 2 + 1, RowWidth * 2 + 2, RowWidth * 3 + 1, RowWidth * 3 + 2]],
+  };
 
-  const tTetromino = [
-    [RowWidth + 1, RowWidth + 2, RowWidth + 3, RowWidth * 2 + 2],
-    [2, RowWidth + 2, RowWidth + 3, RowWidth * 2 + 2],
-    [2, RowWidth + 1, RowWidth + 2, RowWidth + 3],
-    [2, RowWidth + 1, RowWidth + 2, RowWidth * 2 + 2],
-  ];
+  const sTetromino = {
+    rowOffset: 1,
+    positions: [
+      [RowWidth + 2, RowWidth + 3, RowWidth * 2 + 1, RowWidth * 2 + 2],
+      [RowWidth + 2, RowWidth * 2 + 2, RowWidth * 2 + 3, RowWidth * 3 + 3],
+    ],
+  };
 
-  const oTetromino = [[1, 2, RowWidth + 1, RowWidth + 2]];
+  const lTetromino = {
+    rowOffset: 0,
+    positions: [
+      [RowWidth * 2 + 1, RowWidth * 2 + 2, RowWidth * 2 + 3, RowWidth * 3 + 1],
+      [RowWidth + 2, RowWidth * 2 + 2, RowWidth * 3 + 2, RowWidth * 3 + 3],
+      [RowWidth + 3, RowWidth * 2 + 1, RowWidth * 2 + 2, RowWidth * 2 + 3],
+      [RowWidth + 1, RowWidth + 2, RowWidth * 2 + 2, RowWidth * 3 + 2],
+    ],
+  };
 
-  const iTetromino = [
-    [0, 1, 2, 3],
-    [2, RowWidth + 2, RowWidth * 2 + 2, RowWidth * 3 + 2],
-  ];
+  const iTetromino = {
+    rowOffset: 0,
+    positions: [
+      [RowWidth * 2, RowWidth * 2 + 1, RowWidth * 2 + 2, RowWidth * 2 + 3],
+      [2, RowWidth + 2, RowWidth * 2 + 2, RowWidth * 3 + 2],
+    ],
+  };
 
-  const TheTetrominoes = [
-    // jTetromino,
-    // sTetromino,
-    // tTetromino,
-    // oTetromino,
-    iTetromino,
-  ];
+  const TheTetrominoes = [tTetromino, jTetromino, zTetromino, oTetromino, sTetromino, lTetromino, iTetromino];
 
   let nextTetrominoIndex = getRandomTetrominoe();
 
   // Functions
   function getRandomTetrominoe() {
-    return Math.floor(Math.random() * TheTetrominoes.length);
+    let random = Math.floor(Math.random() * TheTetrominoes.length + 1);
+
+    // Classic tetris random piece
+    if (random === currentTetrominoIndex || random == TheTetrominoes.length) {
+      random = Math.floor(Math.random() * TheTetrominoes.length);
+    }
+
+    return random;
   }
 
   function draw() {
     currentTetromio.forEach((index) => {
-      tetrisSquares[currentPosition + index].classList.add("tetromino");
+      if (currentPosition + index > 0 && currentPosition + index < tetrisSquares.length) {
+        tetrisSquares[currentPosition + index].classList.add(TetrominoClass);
+      }
     });
   }
 
   function drawNext() {
-    const NextToClean = NextGrid.querySelectorAll(".tetromino");
+    const NextToClean = NextGrid.querySelectorAll(`.${TetrominoClass}`);
 
     for (let i = 0; i < NextToClean.length; i++) {
-      NextToClean[i].classList.remove("tetromino");
+      NextToClean[i].classList.remove(TetrominoClass);
     }
 
-    TheTetrominoes[nextTetrominoIndex][0].forEach((index) => {
+    TheTetrominoes[nextTetrominoIndex].positions[0].forEach((index) => {
       if (index >= RowWidth) {
         let rest = index % RowWidth;
         let divider = parseInt(index / RowWidth);
         index = rest + NextWidth * divider;
       }
-      nextSquares[index + 0].classList.add("tetromino");
+
+      nextSquares[index + 0].classList.add(TetrominoClass);
     });
   }
 
   function undraw() {
     currentTetromio.forEach((index) => {
-      tetrisSquares[currentPosition + index].classList.remove("tetromino");
+      if (currentPosition + index > 0 && currentPosition + index < tetrisSquares.length) {
+        tetrisSquares[currentPosition + index].classList.remove(TetrominoClass);
+      }
     });
   }
 
   function newTetrominoe() {
     currentTetrominoIndex = nextTetrominoIndex;
-    drawNext();
     nextTetrominoIndex = getRandomTetrominoe();
-    currentTetromio = TheTetrominoes[currentTetrominoIndex][0];
-    currentPosition = 3;
+    drawNext();
+    currentTetromio = TheTetrominoes[currentTetrominoIndex].positions[0];
+    currentPosition = 3 + RowWidth * TheTetrominoes[currentTetrominoIndex].rowOffset;
+  }
+
+  function addScore(points) {
+    score += points;
+    ScoreDisplay.innerText = score;
+  }
+
+  function addLines(lines) {
+    completedLines += lines;
+    LinesDisplay.innerText = completedLines;
+  }
+
+  function addLevel(level = 1) {
+    completedLevels += level;
+    LevelDisplay.innerText = completedLevels;
+  }
+
+  function setLevel() {
+    if (completedLines < 10) {
+      timeToNextFrame = (1 / NessFramerate) * 48;
+    } else if (completedLines < 20) {
+      timeToNextFrame = (1 / NessFramerate) * 43;
+      addLevel();
+    } else if (completedLines < 30) {
+      timeToNextFrame = (1 / NessFramerate) * 38;
+      addLevel();
+    } else if (completedLines < 40) {
+      timeToNextFrame = (1 / NessFramerate) * 33;
+      addLevel();
+    } else if (completedLines < 50) {
+      timeToNextFrame = (1 / NessFramerate) * 28;
+      addLevel();
+    } else if (completedLines < 60) {
+      timeToNextFrame = (1 / NessFramerate) * 23;
+      addLevel();
+    } else if (completedLines < 70) {
+      timeToNextFrame = (1 / NessFramerate) * 18;
+      addLevel();
+    } else if (completedLines < 80) {
+      timeToNextFrame = (1 / NessFramerate) * 13;
+      addLevel();
+    } else if (completedLines < 90) {
+      timeToNextFrame = (1 / NessFramerate) * 8;
+      addLevel();
+    } else if (completedLines < 100) {
+      timeToNextFrame = (1 / NessFramerate) * 6;
+      addLevel();
+    } else if (completedLines < 130) {
+      timeToNextFrame = (1 / NessFramerate) * 6;
+      addLevel();
+    } else if (completedLines < 160) {
+      timeToNextFrame = (1 / NessFramerate) * 4;
+      addLevel();
+    } else if (completedLines < 190) {
+      timeToNextFrame = (1 / NessFramerate) * 3;
+      addLevel();
+    } else if (completedLines < 290) {
+      timeToNextFrame = (1 / NessFramerate) * 2;
+      addLevel();
+    } else {
+      timeToNextFrame = 1 / NessFramerate;
+      addLevel();
+    }
   }
 
   function checkCompletedRow() {
+    let lines = -1;
+
     for (let i = 0; i < tetrisSquares.length; i += RowWidth) {
       let completedRow = true;
 
@@ -124,35 +255,47 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (completedRow) {
-        console.log("Completed row!");
+        // Remove row and add points
+        const RemovedRow = tetrisSquares.splice(i, RowWidth);
+        const FirstCell = Grid.querySelector(`div:not(.${InvisibleClass})`);
+
+        RemovedRow.forEach((cell) => {
+          cell.classList.remove(FrozenClass);
+          FirstCell.before(cell);
+          tetrisSquares.splice(tetrisSquares.indexOf(FirstCell), 0, cell);
+        });
+        lines++;
       }
+    }
+
+    if (lines >= 0) {
+      addLines(lines);
+      addScore(ScoreTable[lines]);
+      setLevel();
     }
   }
 
   function nextFrame() {
     undraw();
+
     if (checkCollision()) {
       // next tetromino
-      currentTetromio.forEach((index) =>
-        tetrisSquares[currentPosition + index].classList.add(FrozenClass)
-      );
+      currentTetromio.forEach((index) => tetrisSquares[currentPosition + index].classList.add(FrozenClass));
       checkCompletedRow();
       newTetrominoe();
-      if (
-        currentTetromio.some((pos) =>
-          tetrisSquares[currentPosition + pos].classList.contains(FrozenClass)
-        )
-      ) {
+
+      if (currentTetromio.some((pos) => tetrisSquares[currentPosition + pos].classList.contains(FrozenClass))) {
         finishGame();
         Grid.classList.add("lost");
       }
     } else {
       currentPosition += RowWidth;
     }
+
     draw();
   }
 
-  function updatePosition(pos) {
+  function updatePosition(pos = DownOffset) {
     if (!checkCollision(pos)) {
       undraw();
       currentPosition += pos;
@@ -163,79 +306,191 @@ document.addEventListener("DOMContentLoaded", () => {
   // Returns true if there isa collision
   function checkCollision(offset = RowWidth, tetromio = currentTetromio) {
     return tetromio.some(
-      (pos) =>
-        currentPosition + pos + offset >= tetrisSquares.length ||
-        tetrisSquares[currentPosition + pos + offset].classList.contains(
-          FrozenClass
-        )
+      (pos) => currentPosition + pos + offset >= tetrisSquares.length || tetrisSquares[currentPosition + pos + offset].classList.contains(FrozenClass)
     );
   }
 
   function finishGame() {
     clearInterval(timer);
-    window.removeEventListener("keydown", mapKeys);
+    ended = true;
+  }
+
+  function nextPosition(position = currentTetromioPosition) {
+    return position + 1 >= TheTetrominoes[currentTetrominoIndex].positions.length ? 0 : position + 1;
   }
 
   function rotatePosition() {
-    undraw();
-    currentTetromioPosition =
-      ++currentTetromioPosition >= TheTetrominoes[currentTetrominoIndex].length
-        ? 0
-        : currentTetromioPosition;
-    currentTetromio =
-      TheTetrominoes[currentTetrominoIndex][currentTetromioPosition];
-    draw();
+    // We check all positions untill one fit, if no one fits continue
+    let position = currentTetromioPosition;
+    do {
+      position = nextPosition(position);
+      const checkedTetromino = TheTetrominoes[currentTetrominoIndex].positions[position];
+      if (!checkCollision(0, checkedTetromino)) {
+        if (canMoveLeft(checkedTetromino) || canMoveRight(checkedTetromino)) {
+          undraw();
+          currentTetromioPosition = position;
+          currentTetromio = TheTetrominoes[currentTetrominoIndex].positions[currentTetromioPosition];
+          draw();
+        }
+      }
+    } while (position !== currentTetromioPosition);
+  }
+
+  function canMoveLeft(tetromino = currentTetromio) {
+    return !tetromino.some((pos) => (currentPosition + pos) % RowWidth === 0);
   }
 
   function moveLeft() {
-    if (
-      !currentTetromio.some((pos) => (currentPosition + pos) % RowWidth === 0)
-    ) {
+    if (canMoveLeft()) {
       updatePosition(LeftOffset);
     }
   }
 
+  function canMoveRight(tetromino = currentTetromio) {
+    return !tetromino.some((pos) => (currentPosition + pos) % RowWidth == RowWidth - 1);
+  }
+
   function moveRight() {
-    if (
-      !currentTetromio.some(
-        (pos) => (currentPosition + pos) % RowWidth == RowWidth - 1
-      )
-    ) {
+    if (canMoveRight()) {
       updatePosition(RightOffset);
     }
   }
 
-  function mapKeys(event) {
-    switch (event.key) {
-      case "ArrowUp":
-        rotatePosition();
-        break;
-      case "ArrowDown":
-        updatePosition(DownOffset);
-        break;
-      case "ArrowLeft":
-        moveLeft();
-        break;
-      case "ArrowRight":
-        moveRight();
-        break;
+  function restartGame() {
+    // Clearing grid
+    tetrisSquares.forEach((cell) => {
+      cell.classList.remove(TetrominoClass);
+      cell.classList.remove(FrozenClass);
+    });
+    Grid.classList.remove("lost");
 
-      default:
-        break;
+    ended = false;
+    completedLevels = 0;
+    score = 0;
+    completedLines = 0;
+
+    clearInterval(timer);
+    startGame();
+  }
+
+  function mapKeys(event) {
+    if (!pause) {
+      if (!ended) {
+        switch (event.key) {
+          case "ArrowUp":
+            rotatePosition();
+            break;
+          case "ArrowDown":
+            updatePosition();
+            break;
+          case "ArrowLeft":
+            moveLeft();
+            break;
+          case "ArrowRight":
+            moveRight();
+            break;
+
+          default:
+            break;
+        }
+      } else {
+        restartGame();
+      }
     }
+  }
+
+  function togglePause() {
+    pause = !pause;
+  }
+
+  function setClickEvents(element, funct) {
+    element.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+    });
+    var hm = new Hammer(element);
+    let holdFlag;
+
+    function clearHold() {
+      if (holdFlag) clearInterval(holdFlag);
+    }
+
+    hm.on("tap", () => {
+      funct();
+    });
+
+    hm.on("press", () => {
+      clearHold();
+
+      holdFlag = setInterval(() => {
+        funct();
+      }, 50);
+    });
+
+    hm.on("pressup", () => {
+      clearHold();
+    });
+
+    hm.on("panend", () => {
+      clearHold();
+    });
+  }
+
+  let currentPanEvent;
+  function setPanEvents(panEvent, panAxis = "x", funct, panTreshold = 40) {
+    let lastUpdate = 0;
+    HammerBody.on(panEvent, ({ deltaX, deltaY }) => {
+      if (!currentPanEvent || currentPanEvent === panEvent) {
+        currentPanEvent = panEvent;
+        let eventDelta;
+        if (panAxis === "x") {
+          eventDelta = deltaX;
+        } else if (panAxis === "y") {
+          eventDelta = deltaY;
+        }
+        const Delta = Math.abs(eventDelta);
+        if (Delta - lastUpdate > panTreshold) {
+          funct();
+          lastUpdate = Delta;
+        }
+      }
+    });
+
+    HammerBody.on("panend", () => {
+      currentPanEvent = null;
+      lastUpdate = 0;
+    });
   }
 
   function startGame() {
     newTetrominoe();
     draw();
-    window.addEventListener("keydown", mapKeys);
+
+    setLevel();
+
+    // Move piece
+    timer = setInterval(() => {
+      if (!pause) {
+        nextFrame();
+      }
+    }, timeToNextFrame * 1000);
   }
 
-  // Game script
-  startGame();
+  // Events
+  StartBtn.addEventListener("click", togglePause);
+  Restart.addEventListener("click", restartGame);
+  // Control Events
+  window.addEventListener("keydown", mapKeys);
+  setClickEvents(RotateBtn, rotatePosition);
+  setClickEvents(LeftBtn, moveLeft);
+  setClickEvents(DownBtn, updatePosition);
+  setClickEvents(RightBtn, moveRight);
 
-  // Move piece
-  // let timer = setInterval(() => {
-  // nextFrame();
-  // }, 100);
+  // Gestures events
+  setPanEvents("panleft", "x", moveLeft);
+  setPanEvents("panright", "x", moveRight);
+  setPanEvents("panup", "y", rotatePosition, 80);
+  setPanEvents("pandown", "y", updatePosition);
+
+  // Starting game!
+  startGame();
 });

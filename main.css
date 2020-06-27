@@ -2,19 +2,91 @@
   box-sizing: border-box;
 }
 
+@-webkit-keyframes AnimationName {
+  0% {
+    background-position: 51% 0%
+  }
+
+  50% {
+    background-position: 50% 100%
+  }
+
+  100% {
+    background-position: 51% 0%
+  }
+}
+
+@-moz-keyframes AnimationName {
+  0% {
+    background-position: 51% 0%
+  }
+
+  50% {
+    background-position: 50% 100%
+  }
+
+  100% {
+    background-position: 51% 0%
+  }
+}
+
+@keyframes AnimationName {
+  0% {
+    background-position: 51% 0%
+  }
+
+  50% {
+    background-position: 50% 100%
+  }
+
+  100% {
+    background-position: 51% 0%
+  }
+}
+
 html {
   height: 100%;
   margin: 0;
   padding: 0;
-
 }
 
 body {
   min-height: 100%;
-  overflow: hidden
+  margin: 0;
+  background: linear-gradient(38deg, #02c2fb, #0e179d, #af47ce);
+  background-size: 600% 600%;
+
+  -webkit-animation: AnimationName 29s ease infinite;
+  -moz-animation: AnimationName 29s ease infinite;
+  animation: AnimationName 29s ease infinite;
+
+  color: white;
 }
 
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h2 {
+  padding: 16px;
+}
+
+h3 {
+  padding: 4px;
+}
+
+
 .container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid-container {
   display: flex;
   max-width: 300px;
   justify-content: space-between;
@@ -23,7 +95,8 @@ body {
 #grid {
   width: 200px;
   height: 400px;
-  background-color: yellow;
+  margin-top: 1em;
+  background-color: black;
   display: flex;
   flex-wrap: wrap;
 }
@@ -40,15 +113,21 @@ body {
   width: 20px;
   height: 20px;
   /* background-color: red; */
-  border: 1px solid black;
+  /* border: 1px solid black; */
+}
+
+#grid div.invisible {
+  display: none;
 }
 
 .tetromino {
   background-color: blue;
+  border: 1px solid black;
 }
 
 .frozen {
   background-color: gray;
+  border: 1px solid black;
 }
 
 #next-grid {
@@ -57,6 +136,7 @@ body {
   /* background-color: lightyellow; */
   display: flex;
   flex-wrap: wrap;
+  margin-left: 16px;
 }
 
 #next-grid div {
@@ -64,6 +144,45 @@ body {
   height: 20px;
 }
 
-#next-grid div.tetromino {
-  border: 1px solid black;
+#play-again {
+  width: 200px;
+  position: absolute;
+  left: calc(50% - 148px);
+  background-color: black;
+  text-align: center;
+  top: 25%;
+  display: none;
+
+}
+
+.lost~#play-again {
+  display: initial;
+}
+
+.button-row {
+  max-width: 400px;
+  margin-top: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.button-row button {
+  width: 20%;
+  padding: .75em;
+  user-select: none;
+}
+
+button {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu {
+  margin-top: .5em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
