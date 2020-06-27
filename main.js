@@ -193,52 +193,55 @@ document.addEventListener("DOMContentLoaded", () => {
   function addLevel(level = 1) {
     completedLevels += level;
     LevelDisplay.innerText = completedLevels;
+    startGameInterval();
   }
 
   function setLevel() {
     if (completedLines < 10) {
       timeToNextFrame = (1 / NessFramerate) * 48;
-    } else if (completedLines < 20) {
+    } else if (completedLines === 10) {
       timeToNextFrame = (1 / NessFramerate) * 43;
       addLevel();
-    } else if (completedLines < 30) {
+    } else if (completedLines === 20) {
       timeToNextFrame = (1 / NessFramerate) * 38;
       addLevel();
-    } else if (completedLines < 40) {
+    } else if (completedLines === 30) {
       timeToNextFrame = (1 / NessFramerate) * 33;
       addLevel();
-    } else if (completedLines < 50) {
+    } else if (completedLines === 40) {
       timeToNextFrame = (1 / NessFramerate) * 28;
       addLevel();
-    } else if (completedLines < 60) {
+    } else if (completedLines === 50) {
       timeToNextFrame = (1 / NessFramerate) * 23;
       addLevel();
-    } else if (completedLines < 70) {
+    } else if (completedLines === 60) {
       timeToNextFrame = (1 / NessFramerate) * 18;
       addLevel();
-    } else if (completedLines < 80) {
+    } else if (completedLines === 70) {
       timeToNextFrame = (1 / NessFramerate) * 13;
       addLevel();
-    } else if (completedLines < 90) {
+    } else if (completedLines === 80) {
       timeToNextFrame = (1 / NessFramerate) * 8;
       addLevel();
-    } else if (completedLines < 100) {
+    } else if (completedLines === 90) {
       timeToNextFrame = (1 / NessFramerate) * 6;
       addLevel();
-    } else if (completedLines < 130) {
+    } else if (completedLines === 100) {
       timeToNextFrame = (1 / NessFramerate) * 6;
       addLevel();
-    } else if (completedLines < 160) {
+    } else if (completedLines === 130) {
       timeToNextFrame = (1 / NessFramerate) * 4;
       addLevel();
-    } else if (completedLines < 190) {
+    } else if (completedLines === 160) {
       timeToNextFrame = (1 / NessFramerate) * 3;
       addLevel();
-    } else if (completedLines < 290) {
+    } else if (completedLines === 190) {
       timeToNextFrame = (1 / NessFramerate) * 2;
       addLevel();
-    } else {
+    } else if (completedLines === 290) {
       timeToNextFrame = 1 / NessFramerate;
+      addLevel();
+    } else if (completedLines > 290) {
       addLevel();
     }
   }
@@ -267,13 +270,13 @@ document.addEventListener("DOMContentLoaded", () => {
           tetrisSquares.splice(tetrisSquares.indexOf(FirstCell), 0, cell);
         });
         lines++;
+        addLines(1);
+        setLevel();
       }
     }
 
     if (lines >= 0) {
-      addLines(lines + 1);
       addScore(ScoreTable[lines]);
-      setLevel();
     }
   }
 
@@ -370,11 +373,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ended = false;
     completedLevels = 0;
-    addLevel(0);
     score = 0;
-    addScore(0);
     completedLines = 0;
-    addLines(0);
 
     clearInterval(timer);
     startGame();
@@ -382,7 +382,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function vibrate() {
     if (vibration) {
-      navigator.vibrate(15);
+      try {
+        navigator.vibrate(15);
+      } catch (error) {}
     }
   }
 
@@ -474,18 +476,25 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function startGame() {
-    newTetrominoe();
-    draw();
-
-    setLevel();
-
+  function startGameInterval(interval = timeToNextFrame) {
+    if (timer) clearInterval(timer);
     // Move piece
     timer = setInterval(() => {
       if (!pause) {
         nextFrame();
       }
-    }, timeToNextFrame * 1000);
+    }, interval * 1000);
+  }
+
+  function startGame() {
+    addLevel(0);
+    addScore(0);
+    addLines(0);
+
+    newTetrominoe();
+    draw();
+    setLevel();
+    startGameInterval();
   }
 
   // Events
