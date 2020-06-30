@@ -176,9 +176,9 @@ document.addEventListener("DOMContentLoaded", () => {
     currentTetrominoIndex = nextTetrominoIndex;
     nextTetrominoIndex = getRandomTetrominoe();
     drawNext();
-    currentTetromio = TheTetrominoes[currentTetrominoIndex].positions[0];
-    currentPosition = 3 + RowWidth * TheTetrominoes[currentTetrominoIndex].rowOffset;
     currentTetromioPosition = 0;
+    currentTetromio = TheTetrominoes[currentTetrominoIndex].positions[currentTetromioPosition];
+    currentPosition = 3 + RowWidth * TheTetrominoes[currentTetrominoIndex].rowOffset;
   }
 
   function addScore(points) {
@@ -389,7 +389,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function mapKeys(event) {
+  function togglePause() {
+    pause = !pause;
+  }
+
+  function keyAction(event) {
     if (!pause) {
       if (!ended) {
         switch (event.key) {
@@ -413,10 +417,6 @@ document.addEventListener("DOMContentLoaded", () => {
         restartGame();
       }
     }
-  }
-
-  function togglePause() {
-    pause = !pause;
   }
 
   function setClickEvents(element, funct) {
@@ -451,30 +451,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  let currentPanEvent;
-  function setPanEvents(panEvent, panAxis = "x", funct, panTreshold = 40) {
-    let lastUpdate = 0;
-    HammerBody.on(panEvent, ({ deltaX, deltaY }) => {
-      if (!currentPanEvent || currentPanEvent === panEvent) {
-        currentPanEvent = panEvent;
-        let eventDelta;
-        if (panAxis === "x") {
-          eventDelta = deltaX;
-        } else if (panAxis === "y") {
-          eventDelta = deltaY;
-        }
-        const Delta = Math.abs(eventDelta);
-        if (Delta - lastUpdate > panTreshold) {
-          funct();
-          lastUpdate = Delta;
-        }
-      }
-    });
+  let panData;
+  const PanThreshold = 40;
+  const PanUpThreshold = 80;
 
-    HammerBody.on("panend panstart", (e) => {
-      currentPanEvent = null;
-      lastUpdate = 0;
-    });
+  function clearPan() {
+    panData = { deltaX: 0, deltaY: 0 };
+  }
+
+  clearPan();
+
+  function mapPan(event) {
+    switch (event.additionalEvent) {
+      case "panleft":
+        if (event.deltaX < panData.deltaX - PanThreshold) {
+          keyAction({ key: "ArrowLeft" });
+          panData.deltaX = event.deltaX;
+        }
+        break;
+      case "panright":
+        if (event.deltaX > panData.deltaX + PanThreshold) {
+          keyAction({ key: "ArrowRight" });
+          panData.deltaX = event.deltaX;
+        }
+        break;
+      case "panup":
+        if (event.deltaY < panData.deltaY - PanUpThreshold) {
+          keyAction({ key: "ArrowUp" });
+          panData.deltaY = event.deltaY;
+        }
+        break;
+      case "pandown":
+        if (event.deltaY > panData.deltaY + PanThreshold) {
+          keyAction({ key: "ArrowDown" });
+          panData.deltaY = event.deltaY;
+        }
+        break;
+
+      default:
+        break;
+    }
   }
 
   function startGameInterval(interval = timeToNextFrame) {
@@ -506,38 +522,41 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Control Events
-  window.addEventListener("keydown", mapKeys);
+  window.addEventListener("keydown", keyAction);
   setClickEvents(RotateBtn, () => {
-    mapKeys({ key: "ArrowUp" });
+    keyAction({ key: "ArrowUp" });
   });
   setClickEvents(LeftBtn, () => {
-    mapKeys({ key: "ArrowLeft" });
+    keyAction({ key: "ArrowLeft" });
   });
   setClickEvents(DownBtn, () => {
-    mapKeys({ key: "ArrowDown" });
+    keyAction({ key: "ArrowDown" });
   });
   setClickEvents(RightBtn, () => {
-    mapKeys({ key: "ArrowRight" });
+    keyAction({ key: "ArrowRight" });
   });
 
   // Gestures events
-  setPanEvents(
-    "panup",
-    "y",
-    () => {
-      mapKeys({ key: "ArrowUp" });
-    },
-    80
-  );
-  setPanEvents("panleft", "x", () => {
-    mapKeys({ key: "ArrowLeft" });
-  });
-  setPanEvents("pandown", "y", () => {
-    mapKeys({ key: "ArrowDown" });
-  });
-  setPanEvents("panright", "x", () => {
-    mapKeys({ key: "ArrowRight" });
-  });
+  HammerBody.on("pan", mapPan);
+  HammerBody.on("panend panstart", clearPan);
+
+  // setPanEvents(
+  //   "panup",
+  //   "y",
+  //   () => {
+  //     mapKeys({ key: "ArrowUp" });
+  //   },
+  //   80
+  // );
+  // setPanEvents("panleft", "x", () => {
+  //   mapKeys({ key: "ArrowLeft" });
+  // });
+  // setPanEvents("pandown", "y", () => {
+  //   mapKeys({ key: "ArrowDown" });
+  // });
+  // setPanEvents("panright", "x", () => {
+  //   mapKeys({ key: "ArrowRight" });
+  // });
 
   // Starting game!
   startGame();
